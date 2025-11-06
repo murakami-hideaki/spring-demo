@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+
+  <!-- 基本プロパティ -->
+  <property name="APP_NAME" value="${APP_NAME:-${spring.application.name:-unknown-app}}"/>
+  <property name="LOG_CHARSET" value="UTF-8"/>
+
+  <!-- WEB 用パターン:
+       - %msg 内の改行はスペースに置換して1行に整形
+       - 例外の1行目を同一行に付与し、改行ののちに完全なスタックトレースを出力
+       - %msgが未指定の場合は空文字が出力されます（ログ自体は出力される）
+       - %exが未指定の場合は何も出力されません（ログ自体は出力される）
+       - MDCからリクエストID・URI・HTTPメソッドを出力する（ラベルなし、ログ圧縮目的）
+  -->
+  <property name="PATTERN_WEB"
+            value="[%d{yyyy-MM-dd'T'HH:mm:ss.SSS}] %-5level %logger{48} [%thread] %X{requestId:-N/A} %X{requestUri:-N/A} %X{httpMethod:-N/A} %replace(%msg){'[\r\n]+',' '} %ex{1}%n%ex"/>
+  
+  <!-- 外部FW用のシンプルなパターン -->
+  <property name="PATTERN_FW"
+            value="[%d{yyyy-MM-dd'T'HH:mm:ss.SSS}] %-5level %logger{48} [%thread] %msg%n"/>
+
+  <!-- WEB 用コンソール -->
+  <appender name="CONSOLE_WEB" class="ch.qos.logback.core.ConsoleAppender">
+    <target>System.out</target>
+    <encoder>
+      <pattern>${PATTERN_WEB}</pattern>
+      <charset>${LOG_CHARSET}</charset>
+    </encoder>
+  </appender>
+
+  <!-- 外部FW用コンソール -->
+  <appender name="CONSOLE_FW" class="ch.qos.logback.core.ConsoleAppender">
+    <target>System.out</target>
+    <encoder>
+      <pattern>${PATTERN_FW}</pattern>
+      <charset>${LOG_CHARSET}</charset>
+    </encoder>
+  </appender>
+
+  <!-- ルートロガー（外部FWのログはCONSOLE_FWへ） -->
+  <root level="WARN">
+    <appender-ref ref="CONSOLE_FW"/>
+  </root>
+
+  <!-- com.example.demo配下のみCONSOLE_WEBに出力 -->
+  <logger name="com.example.demo" level="INFO" additivity="false">
+    <appender-ref ref="CONSOLE_WEB"/>
+  </logger>
+
+  <!-- 必要に応じて個別パッケージにも指定可 -->
+  <logger name="com.example.demo.framework.controller" level="INFO" additivity="false">
+    <appender-ref ref="CONSOLE_WEB"/>
+  </logger>
+  <logger name="com.example.demo.framework.service" level="INFO" additivity="false">
+    <appender-ref ref="CONSOLE_WEB"/>
+  </logger>
+  <logger name="com.example.demo.framework.filter" level="INFO" additivity="false">
+    <appender-ref ref="CONSOLE_WEB"/>
+  </logger>
+  <logger name="com.example.demo.framework.config" level="INFO" additivity="false">
+    <appender-ref ref="CONSOLE_FW"/>
+  </logger>
+
+  <!-- ライブラリ系は冗長にならないよう抑制 -->
+  <logger name="org.springframework" level="WARN"/>
+  <logger name="org.hibernate" level="WARN"/>
+
+  <!-- フレームワーク自体のログ -->
+  <logger name="com.example.demo.framework" level="INFO"/>
+
+  <!-- プロファイルごとの出力レベル -->
+  <springProfile name="dev">
+    <logger name="com.example.demo" level="INFO"/>
+  </springProfile>
+
+  <springProfile name="prod">
+    <logger name="com.example.demo" level="INFO"/>
+  </springProfile>
+
+</configuration>

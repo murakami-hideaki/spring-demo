@@ -1,0 +1,8 @@
+# このファイルは共通設定です。
+# 個別の環境ごとの設定は application-dev.yml や application-prod.yml で上書きできます。
+spring:
+  application:
+    name: demo  # アプリケーション名（全環境共通で利用）
+  profiles:
+    active: prod  # デフォルトは本番プロファイル(prod)を有効化
+
